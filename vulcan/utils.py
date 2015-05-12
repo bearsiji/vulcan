@@ -75,14 +75,19 @@ class HtmlAnalyzer(object):
     def extract_links_gxdk(html):
        soup = bs4.BeautifulSoup(html, from_encoding='utf-8')
        div = soup.find('div' , {'class' : 'detailbox'})
-       if div is None:
-           return
-       for a in div.find_all('a'):
-           href = a.get('href')
-           if 'tag' not in href and 'news.gxdk.com.cn/list' not in href:
-               if href.find('/list') == 0:
-                   href = 'http://news.gxdk.com.cn' + href
-               yield href
+       link_list = []
+       if div is not None:
+           for a in div.find_all('a'):
+               href = a.get('href')
+               if href is not None:
+                   if 'tag' not in href and 'news.gxdk.com.cn/list' not in href:
+                       if href.find('/list') == 0:
+                           link_list.append('http://news.gxdk.com.cn' + href)
+                       if href.endswith('shtml'):
+                           link_list.append(href)
+
+       for link in link_list:
+           yield link
 
     @staticmethod
     def extract_links_ithome(html):

@@ -306,9 +306,9 @@ class Spider(object):
                 curr_depth = pre_depth+1
                 #link_generator = HtmlAnalyzer.extract_links(url_data.html,url_data.url,self.crawl_tags)
                 link_list = []
-                if '/category/47' not in url_data.url:
-                    continue
-                link_generator = HtmlAnalyzer.extract_links_ithome(url_data.html)
+                #if '/category/47' not in url_data.url:
+                    #continue
+                link_generator = HtmlAnalyzer.extract_links_gxdk(url_data.html)
                 link_list = [url for url in link_generator]
                 if self.dynamic_parse:
                     link_generator = self.webkit.extract_links(url_data.url)
@@ -419,7 +419,7 @@ class Spider(object):
         return url_origin == self.origin
 
 if __name__ == '__main__':
-    spider = Spider(concurrent_num=200,depth=5,max_url_num=3000,crawler_mode=1,dynamic_parse=False, check_useable = False)
     url = sys.argv[1]
+    spider = Spider(concurrent_num=200,depth=5,max_url_num=3000,crawler_mode=1,dynamic_parse=False, check_useable = False)
     spider.feed_url(url)
     spider.start()
