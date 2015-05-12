@@ -131,6 +131,8 @@ class Fetcher(Greenlet):
                             if not self.spider.crawler_stopped.isSet():
                                 self.crawler_queue.put(url_data,block=True)
                             self.crawler_cache.insert(url_data)
+                            with open('./data/' + url_data.url.split('/')[-1], 'w') as f:
+                                f.write(url_data.html.encode('utf-8'))
                     except Exception,e:
                         import traceback
                         traceback.print_exc()
@@ -181,7 +183,7 @@ class Spider(object):
         
     def __init__(self, concurrent_num=20, crawl_tags=[], custom_headers={}, plugin=[], depth=3, 
                  max_url_num=300, internal_timeout=60, spider_timeout=6*3600, 
-                 crawler_mode=0, same_origin=True, dynamic_parse=False):
+                 crawler_mode=0, same_origin=True, dynamic_parse=False, check_useable=False):
         """
         concurrent_num    : 并行crawler和fetcher数量
         crawl_tags        : 爬行时收集URL所属标签列表
@@ -225,6 +227,7 @@ class Spider(object):
         self.ignore_ext = ['js','css','png','jpg','gif','bmp','svg','exif','jpeg','exe','rar','zip']
         self.crawl_tags = list(set(self.default_crawl_tags)|set(crawl_tags))
         self.same_origin = same_origin
+        self.check_useable = check_useable
         self.depth = depth
         self.max_url_num = max_url_num
         self.dynamic_parse = dynamic_parse
@@ -301,8 +304,12 @@ class Spider(object):
             else:
                 pre_depth = url_data.depth
                 curr_depth = pre_depth+1
-                link_generator = HtmlAnalyzer.extract_links(url_data.html,url_data.url,self.crawl_tags)
-                link_list = [ url for url in link_generator]
+                #link_generator = HtmlAnalyzer.extract_links(url_data.html,url_data.url,self.crawl_tags)
+                link_list = []
+                if '/category/47' not in url_data.url:
+                    continue
+                link_generator = HtmlAnalyzer.extract_links_ithome(url_data.html)
+                link_list = [url for url in link_generator]
                 if self.dynamic_parse:
                     link_generator = self.webkit.extract_links(url_data.url)
                     link_list.extend([ url for url in link_generator])
@@ -342,6 +349,9 @@ class Spider(object):
         '''
         检查URL是否符合可用规则
         '''
+        if not self.check_useable:
+            return True
+
         if link in self.fetcher_cache:
             return False
             
@@ -409,7 +419,7 @@ class Spider(object):
         return url_origin == self.origin
 
 if __name__ == '__main__':
-    spider = Spider(concurrent_num=20,depth=5,max_url_num=300,crawler_mode=1,dynamic_parse=False)
+    spider = Spider(concurrent_num=200,depth=5,max_url_num=3000,crawler_mode=1,dynamic_parse=False, check_useable = False)
     url = sys.argv[1]
     spider.feed_url(url)
     spider.start()

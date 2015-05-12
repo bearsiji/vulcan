@@ -3,6 +3,7 @@
 # code by pnig0s@20140131
 
 import urlparse
+import bs4
 
 import lxml.html as H
 from splinter import Browser
@@ -69,3 +70,38 @@ class HtmlAnalyzer(object):
         for link in links_in_doc:
             if link[0].tag in set(default_tags):
                 yield link[2]
+
+    @staticmethod
+    def extract_links_gxdk(html):
+       soup = bs4.BeautifulSoup(html, from_encoding='utf-8')
+       div = soup.find('div' , {'class' : 'detailbox'})
+       if div is None:
+           return
+       for a in div.find_all('a'):
+           href = a.get('href')
+           if 'tag' not in href and 'news.gxdk.com.cn/list' not in href:
+               if href.find('/list') == 0:
+                   href = 'http://news.gxdk.com.cn' + href
+               yield href
+
+    @staticmethod
+    def extract_links_ithome(html):
+       soup = bs4.BeautifulSoup(html, from_encoding='utf-8')
+       list = []
+       href = ''
+       div = soup.find('div' , {'class' : 'content fl'})
+       if div is None:
+           return
+       for a in div.find_all('a'):
+           href = a.get('href')
+           if href is None:
+               continue
+           if 'tag' not in href and (href.endswith('html') or href.endswith('htm')):
+               print 'page', href
+               if href.find('/category/47') == 0:
+                   list.append('http://it.ithome.com' + href)     
+               else:
+                   list.append(href)
+
+       for link in list:
+           yield link
