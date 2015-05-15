@@ -83,7 +83,7 @@ class HtmlAnalyzer(object):
                    if 'tag' not in href and 'news.gxdk.com.cn/list' not in href:
                        if href.find('/list') == 0:
                            link_list.append('http://news.gxdk.com.cn' + href)
-                       if href.endswith('shtml'):
+                       elif href.endswith('shtml'):
                            link_list.append(href)
 
        for link in link_list:
@@ -102,7 +102,6 @@ class HtmlAnalyzer(object):
            if href is None:
                continue
            if 'tag' not in href and (href.endswith('html') or href.endswith('htm')):
-               print 'page', href
                if href.find('/category/47') == 0:
                    list.append('http://it.ithome.com' + href)     
                else:

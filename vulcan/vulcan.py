@@ -44,6 +44,9 @@ import chardet
 from Data import UrlCache,UrlData
 from utils import HtmlAnalyzer
 
+import sys
+sys.setrecursionlimit(10000) 
+
 try:
     from utils import WebKit
 except Exception,e:
@@ -131,8 +134,6 @@ class Fetcher(Greenlet):
                             if not self.spider.crawler_stopped.isSet():
                                 self.crawler_queue.put(url_data,block=True)
                             self.crawler_cache.insert(url_data)
-                            with open('./data/' + url_data.url.split('/')[-1], 'w') as f:
-                                f.write(url_data.html.encode('utf-8'))
                     except Exception,e:
                         import traceback
                         traceback.print_exc()
@@ -306,9 +307,7 @@ class Spider(object):
                 curr_depth = pre_depth+1
                 #link_generator = HtmlAnalyzer.extract_links(url_data.html,url_data.url,self.crawl_tags)
                 link_list = []
-                #if '/category/47' not in url_data.url:
-                    #continue
-                link_generator = HtmlAnalyzer.extract_links_gxdk(url_data.html)
+                link_generator = HtmlAnalyzer.extract_links_ithome(url_data.html)
                 link_list = [url for url in link_generator]
                 if self.dynamic_parse:
                     link_generator = self.webkit.extract_links(url_data.url)
@@ -418,8 +417,12 @@ class Spider(object):
         url_origin = (url_part.scheme,url_part.netloc)
         return url_origin == self.origin
 
+def crawl_each_page(url_form, index_start, index_end): 
+    for i in range(index_start, index_end):
+        url = url_form  %i
+        spider = Spider(concurrent_num=1,depth=1,max_url_num=100,crawler_mode=1,dynamic_parse=False, check_useable = False)
+        spider.feed_url(url)
+        spider.start()
+
 if __name__ == '__main__':
-    url = sys.argv[1]
-    spider = Spider(concurrent_num=200,depth=5,max_url_num=3000,crawler_mode=1,dynamic_parse=False, check_useable = False)
-    spider.feed_url(url)
-    spider.start()
+    pass
